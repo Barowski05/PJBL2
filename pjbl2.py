@@ -57,36 +57,61 @@ def plot_grafos(grafo, caminho, ini, fin, desig, Comp):
             G.add_edge(i, vizinho, weight=peso)
             G_result.add_edge(i, vizinho, weight=peso)
 
-    pos = nx.spring_layout(G, seed=24)
+    pos = nx.circular_layout(G)
 
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(12, 6))
+    
+    # --- Grafo Original ---
     plt.subplot(1, 2, 1)
-    nx.draw(G, pos, with_labels=True, labels={i: desig[i] for i in range(len(desig))},
-            node_color='lightgray', node_size=500, font_size=10, font_color='black',
-            edge_color='black', linewidths=1, edgecolors='black')
-    nx.draw_networkx_nodes(G, pos, nodelist=[ini], node_color='lightgreen', edgecolors='black', linewidths=0)
-    nx.draw_networkx_nodes(G, pos, nodelist=[fin], node_color='lightsalmon', edgecolors='black', linewidths=0)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels={(u, v): d['weight'] for u, v, d in G.edges(data=True)},
-                                 font_color='black', rotate=False)
+    nx.draw_networkx_edges(G, pos, edge_color='black')
+    nx.draw_networkx_edge_labels(G, pos,
+                                 edge_labels={(u, v): d['weight'] for u, v, d in G.edges(data=True)},
+                                 font_color='black')
+
+    # Rótulos com fundo personalizado
+    labels = {}
+    label_colors = {}
+    for i in range(len(desig)):
+        labels[i] = desig[i]
+        if i == ini:
+            label_colors[i] = 'lightgreen'
+        elif i == fin:
+            label_colors[i] = 'lightsalmon'
+        else:
+            label_colors[i] = 'lightgray'
+
+    for i in labels:
+        nx.draw_networkx_labels(G, pos, labels={i: labels[i]},
+                                font_size=10,
+                                bbox=dict(boxstyle="round,pad=0.3",
+                                          facecolor=label_colors[i],
+                                          edgecolor='black'))
+
     plt.title("Grafo Original")
 
+    # --- Grafo com Caminho Mínimo ---
     plt.subplot(1, 2, 2)
-    edge_colors = ['lightgray' if not (u in caminho and v in caminho and abs(caminho.index(u) - caminho.index(v)) == 1) else 'black' for u, v in G_result.edges()]
-    nx.draw(G_result, pos, with_labels=True, labels={i: desig[i] for i in range(len(desig))},
-            node_color='lightgray', node_size=500, font_size=10, font_color='black',
-            edge_color=edge_colors, linewidths=1, edgecolors='black')
-    nx.draw_networkx_nodes(G_result, pos, nodelist=[ini], node_color='lightgreen', edgecolors='black', linewidths=0)
-    nx.draw_networkx_nodes(G_result, pos, nodelist=[fin], node_color='lightsalmon', edgecolors='black', linewidths=0)
+    edge_colors = ['black' if (u in caminho and v in caminho and abs(caminho.index(u) - caminho.index(v)) == 1) else 'lightgray'
+                   for u, v in G_result.edges()]
+    
+    nx.draw_networkx_edges(G_result, pos, edge_color=edge_colors)
+    nx.draw_networkx_edge_labels(G_result, pos,
+                                 edge_labels={(u, v): d['weight'] for u, v, d in G_result.edges(data=True)},
+                                 font_color='black')
 
-    edge_labels_result = {(u, v): d['weight'] for u, v, d in G_result.edges(data=True)}
-    for (u, v) in edge_labels_result:
-        color = 'black' if (u in caminho and v in caminho and abs(caminho.index(u) - caminho.index(v)) == 1) else 'lightgray'
-        nx.draw_networkx_edge_labels(G_result, pos, edge_labels={(u, v): edge_labels_result[(u, v)]},
-                                     font_color=color, rotate=False)
+    for i in labels:
+        nx.draw_networkx_labels(G_result, pos, labels={i: labels[i]},
+                                font_size=10,
+                                bbox=dict(boxstyle="round,pad=0.3",
+                                          facecolor=label_colors[i],
+                                          edgecolor='black'))
 
-    plt.title("Grafo com Caminho Minimo")
+    plt.title("Grafo com Caminho Mínimo")
     plt.text(0.5, -0.1, f"Comprimento caminho: {Comp}", fontsize=10, ha='center', transform=plt.gca().transAxes)
+    plt.tight_layout()
     plt.show()
+
+
 
 # Função principal
 cidades = ['Aurora', 'Bonito', 'Carmo', 'Douras', 'Estela', 'Felice', 'Gema', 'Herval', 'Ipiau', 'Jaburu', 'Lindoa', 'Mundau']
@@ -106,8 +131,8 @@ LA = [
     [(7, 30), (8, 50),(10,55)]                   # Mundaú 11
 ]
 
-orig = 0  # Bonito
-destf = 1 # Herval
+orig = 1  # Bonito
+destf = 7 # Herval
 
 print("\nVertice inicial.: " + cidades[orig])
 print("Vertice final...: " + cidades[destf])
